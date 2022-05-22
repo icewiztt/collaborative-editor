@@ -2,6 +2,7 @@ package edu.icewiz.timny;
 
 import javafx.fxml.FXML;
 import javafx.scene.control.TextArea;
+import org.fxmisc.richtext.CodeArea;
 import org.java_websocket.WebSocket;
 import org.java_websocket.drafts.Draft;
 import org.java_websocket.drafts.Draft_6455;
@@ -11,6 +12,7 @@ import org.java_websocket.extensions.permessage_deflate.PerMessageDeflateExtensi
 
 
 import java.net.InetSocketAddress;
+import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.util.Collections;
 import java.util.HashMap;
@@ -22,7 +24,7 @@ public class EditingServer extends WebSocketServer {
     @FXML
     private TextArea logArea;
     @FXML
-    private TextArea editingText;
+    private CodeArea editingText;
     private static final Draft perMessageDeflateDraft = new Draft_6455(
             new PerMessageDeflateExtension());
     public EditingServer(int port) {
@@ -50,6 +52,13 @@ public class EditingServer extends WebSocketServer {
         //Do not need this function
         //But it is here to fulfill interface requirement
     }
+    private void broadcastExclude(WebSocket conn, ByteBuffer message){
+        for(WebSocket other: ConnectionInfo.keySet()){
+            if(other != conn){
+                other.send(message);
+            }
+        }
+    }
     @Override
     public void onMessage(WebSocket conn, ByteBuffer message) {
         WebSocketMessage operation = new WebSocketMessage(message);
@@ -61,8 +70,8 @@ public class EditingServer extends WebSocketServer {
             logArea.appendText(operation.detail + " join the server" + "!\n");
             logArea.positionCaret(logArea.getLength());
         }else if(operation.type == 2){
-            editingText.setText(operation.detail);
-            broadcast(message);
+            editingText.replaceText(0,editingText.getLength(),operation.detail);
+            broadcastExclude(conn, message);
         }
         System.out.println(conn + ": " + message);
     }
@@ -88,7 +97,7 @@ public class EditingServer extends WebSocketServer {
     public void setLogArea(TextArea logArea){
         this.logArea = logArea;
     }
-    public void setEditingText(TextArea editingText){this.editingText = editingText;}
+    public void setEditingText(CodeArea editingText){this.editingText = editingText;}
     public void setName(String name){
         if(name != null)myName = name;
     }

@@ -35,6 +35,8 @@ public class MainApp extends Application{
         editingPageController.setLandingPageScene(landingPageScene);
         editingPageController.setLandingPageController(landingPageController);
 
+        editingPageScene.getStylesheets().add(EditingPageController.class.getResource("assets/java-keywords.css").toExternalForm());
+
         stage.setTitle("Timny");
         stage.setScene(landingPageScene);
         stage.setOnCloseRequest(new EventHandler<WindowEvent>() {
@@ -47,6 +49,11 @@ public class MainApp extends Application{
     }
 
     public static void main(String[] args) {
+        Platform.runLater(() -> {
+            try {
+                new MainApp().start(new Stage());
+            }catch (Exception e){}
+        });
         Platform.runLater(() -> {
             try {
                 new MainApp().start(new Stage());

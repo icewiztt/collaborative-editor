@@ -6,6 +6,7 @@ import java.nio.ByteBuffer;
 
 import javafx.fxml.FXML;
 import javafx.scene.control.TextArea;
+import org.fxmisc.richtext.CodeArea;
 import org.java_websocket.client.WebSocketClient;
 import org.java_websocket.drafts.Draft;
 import org.java_websocket.drafts.Draft_6455;
@@ -15,7 +16,7 @@ import org.java_websocket.handshake.ServerHandshake;
 public class EditingClient extends WebSocketClient {
     private String myName = "Bob";
     @FXML
-    private TextArea editingText;
+    private CodeArea editingText;
     @FXML
     private TextArea logArea;
     private static final Draft perMessageDeflateDraft = new Draft_6455(
@@ -48,7 +49,7 @@ public class EditingClient extends WebSocketClient {
             logArea.appendText("Received message: " + operation.detail + "!\n");
             logArea.positionCaret(logArea.getLength());
         }else if(operation.type == 2){
-            editingText.setText(operation.detail);
+            editingText.replaceText(0,editingText.getLength(),operation.detail);
         }
     }
 
@@ -68,7 +69,7 @@ public class EditingClient extends WebSocketClient {
     public void setLogArea(TextArea logArea){
         this.logArea = logArea;
     }
-    public void setEditingText(TextArea editingText){this.editingText = editingText;}
+    public void setEditingText(CodeArea editingText){this.editingText = editingText;}
 
     public void setName(String name){
         if(name != null)this.myName = name;
