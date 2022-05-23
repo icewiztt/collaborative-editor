@@ -20,6 +20,8 @@ import java.util.Map;
 
 public class EditingServer extends WebSocketServer {
     HashMap<WebSocket,String> ConnectionInfo = new HashMap<WebSocket,String>();
+    private EditingPageController editingPageController;
+
     private String myName = "Alice";
     @FXML
     private TextArea logArea;
@@ -48,16 +50,9 @@ public class EditingServer extends WebSocketServer {
         logArea.positionCaret(logArea.getLength());
     }
     @Override
-    public void onMessage(WebSocket conn, String message){
+    public void onMessage(WebSocket conn, String message) {
         //Do not need this function
         //But it is here to fulfill interface requirement
-    }
-    private void broadcastExclude(WebSocket conn, ByteBuffer message){
-        for(WebSocket other: ConnectionInfo.keySet()){
-            if(other != conn){
-                other.send(message);
-            }
-        }
     }
     @Override
     public void onMessage(WebSocket conn, ByteBuffer message) {
@@ -94,6 +89,13 @@ public class EditingServer extends WebSocketServer {
         setConnectionLostTimeout(100);
     }
 
+    private void broadcastExclude(WebSocket conn, ByteBuffer message){
+        for(WebSocket client : ConnectionInfo.keySet()){
+            if(client.equals(conn))continue;
+            client.send(message);
+        }
+    }
+
     public void setLogArea(TextArea logArea){
         this.logArea = logArea;
     }
@@ -103,5 +105,8 @@ public class EditingServer extends WebSocketServer {
     }
     public void Shutdown() throws InterruptedException{
         stop(1000);
+    }
+    public void setEditingPageController(EditingPageController editingPageController){
+        this.editingPageController = editingPageController;
     }
 }
