@@ -113,7 +113,7 @@ public class EditingPageController {
     @FXML
     void initialize() {
         Platform.setImplicitExit(false);
-        lastReceivedMessage = "";
+        lastReceivedMessage = null;
         editingText.setParagraphGraphicFactory(LineNumberFactory.get(editingText));
 
         editingText.getVisibleParagraphs().addModificationObserver
@@ -132,14 +132,12 @@ public class EditingPageController {
                 if (m0.find()) Platform.runLater(() -> editingText.insertText(caretPosition, m0.group()));
             }
         });
-        editingText.replaceText(0, 0, sampleCode);
+        editingText.replaceText(sampleCode);
 
         logArea.setEditable(false);
 //        editingText.requestFocus();
         editingText.textProperty().addListener((observable, oldValue, newValue) -> {
-            if(oldValue.equals(newValue) || lastReceivedMessage.equals(newValue))return;
-//            editingText.setEditable(false);
-//            System.out.println("editingText changed from " + oldValue + " to " + newValue);
+            if(oldValue.equals(newValue) || (lastReceivedMessage != null && lastReceivedMessage.equals(newValue)))return;
             if(editingClient != null){
                 editingClient.send(WebSocketMessage.serializeFromString(2, newValue));
             }else if(editingServer != null){

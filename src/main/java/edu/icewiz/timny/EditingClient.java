@@ -4,6 +4,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.ByteBuffer;
 
+import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.control.TextArea;
 import org.fxmisc.richtext.CodeArea;
@@ -47,13 +48,19 @@ public class EditingClient extends WebSocketClient {
     @Override
     public void onMessage(ByteBuffer message) {
         WebSocketMessage operation = new WebSocketMessage(message);
+        Runnable update = () -> editingText.replaceText(operation.detail);;
         if(operation.type == 0){
             logArea.appendText("Received message: " + operation.detail + "!\n");
             logArea.positionCaret(logArea.getLength());
         }else if(operation.type == 2){
-            if(editingPageController.lastReceivedMessage.equals(operation.detail))return;
+            if(editingPageController.lastReceivedMessage != null && editingPageController.lastReceivedMessage.equals(operation.detail))return;
             editingPageController.lastReceivedMessage = operation.detail;
-            editingText.replaceText(0,editingText.getLength(),operation.detail);
+            if (Platform.isFxApplicationThread()) {
+                update.run();
+            }
+            else {
+                Platform.runLater(update);
+            }
         }
     }
 

@@ -1,5 +1,6 @@
 package edu.icewiz.timny;
 
+import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.control.TextArea;
 import org.fxmisc.richtext.CodeArea;
@@ -57,6 +58,7 @@ public class EditingServer extends WebSocketServer {
     @Override
     public void onMessage(WebSocket conn, ByteBuffer message) {
         WebSocketMessage operation = new WebSocketMessage(message);
+        Runnable update = () -> editingText.replaceText(operation.detail);;
         if(operation.type == 0){
             logArea.appendText(ConnectionInfo.get(conn) + ": " + operation.detail + "!\n");
             logArea.positionCaret(logArea.getLength());
@@ -65,8 +67,15 @@ public class EditingServer extends WebSocketServer {
             logArea.appendText(operation.detail + " join the server" + "!\n");
             logArea.positionCaret(logArea.getLength());
         }else if(operation.type == 2){
-            editingText.replaceText(0,editingText.getLength(),operation.detail);
+            if(editingPageController.lastReceivedMessage != null && editingPageController.lastReceivedMessage.equals(operation.detail))return;
             broadcastExclude(conn, message);
+            editingPageController.lastReceivedMessage = operation.detail;
+            if (Platform.isFxApplicationThread()) {
+                update.run();
+            }
+            else {
+                Platform.runLater(update);
+            }
         }
         System.out.println(conn + ": " + message);
     }
@@ -75,7 +84,7 @@ public class EditingServer extends WebSocketServer {
     public void onError(WebSocket conn, Exception ex) {
         ex.printStackTrace();
         if (conn != null) {
-            logArea.appendText("Server encountered an error: " + ex + "!\n");
+            logArea.appendText(ConnectionInfo.get(conn) + "Server encountered an error: " + ex + "!\n");
             logArea.positionCaret(logArea.getLength());
         }
     }
